@@ -10,7 +10,7 @@ import networkx as nx
 
 filepath = "./data/LN_DUPLICATES_FULL.csv"
 
-results = "./data/dup_results3.txt"
+results = "./data/dup_results4.txt"
 
 results_file = open(results, 'w')
 
@@ -25,7 +25,7 @@ def normalize(text):
     text = re.sub(r'[^a-z0-9]', '', text.lower())
     return text
 
-def is_duplicate(r1, r2, threshold=75):
+def is_duplicate(r1, r2, threshold=78):
 
     name1 = f"{r1.get('First Name', '')}"
     name2 = f"{r2.get('First Name', '')}"
@@ -83,7 +83,7 @@ print(f"Found {len(clusters)} potential duplicate groups.\n")
 results_file.write(f"Found {len(clusters)} potential duplicate groups.\n")
 
 # Prepare to write all related names to a new CSV
-output_csv = "./data/FULL_DUPLICATE_GROUPS_EMAIL_WEIGHT.csv"
+output_csv = "./data/FULL_DUPLICATE_GROUPS_EMAIL_WEIGHT3.csv"
 with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
     fieldnames = df.columns.tolist() + ['Duplicate Group']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
