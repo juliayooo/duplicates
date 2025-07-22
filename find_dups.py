@@ -8,9 +8,9 @@ import networkx as nx
 
 
 
-filepath = "./data/DUP_CHECK.csv"
+filepath = "./data/LN_DUPLICATES.csv"
 
-results = "./data/dup_results.txt"
+results = "./data/dup_results2.txt"
 
 results_file = open(results, 'w')
 
@@ -26,8 +26,8 @@ def normalize(text):
     return text
 
 def is_duplicate(r1, r2, threshold=75):
-    name1 = f"{r1.get('First Name', '')} {r1.get('Last Name', '')}"
-    name2 = f"{r2.get('First Name', '')} {r2.get('Last Name', '')}"
+    name1 = f"{r1.get('First Name', '')}"
+    name2 = f"{r2.get('First Name', '')}"
 
     email1 = str(r1.get('Email', ''))
     email2 = str(r2.get('Email', ''))
@@ -44,8 +44,14 @@ def is_duplicate(r1, r2, threshold=75):
 
 blocks = defaultdict(list)
 for record in records:
-    key = normalize(record.get('First Name', ''))[:1]
+    last_name = record.get('Last Name', '')
+    if pd.isnull(last_name):
+        last_name = ''
+    normalized_last_name = normalize(last_name)
+    length = len(normalized_last_name)
+    key = normalized_last_name[:length]
     blocks[key].append(record)
+print(f"Total blocks created: {len(blocks)}\n")
 
 
 limit = 0
@@ -74,5 +80,5 @@ for idx, group in enumerate(clusters, 1):
     print(f"Group {idx}:")
     for record_id in group:
         contact = df[df['Contact ID'] == record_id].to_dict(orient='records')[0]
-        print(f"  - {contact['First Name']} {contact['Last Name']} | {contact['Email']} | {contact['Phone']}")
+        print(f"  - {contact['First Name']} {contact['Last Name']} | {contact['Email']} | {contact['Phone']}| {normalize(contact['Home Zip/Postal Code'])}")
     print()
