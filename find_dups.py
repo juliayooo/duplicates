@@ -8,7 +8,7 @@ import networkx as nx
 
 
 
-filepath = "./data/LN_DUPLICATES.csv"
+filepath = "./data/LN_DUPLICATES_FULL.csv"
 
 results = "./data/dup_results2.txt"
 
@@ -25,15 +25,13 @@ def normalize(text):
     text = re.sub(r'[^a-z0-9]', '', text.lower())
     return text
 
-def is_duplicate(r1, r2, threshold=75):
+def is_duplicate(r1, r2, threshold=68):
     name1 = f"{r1.get('First Name', '')}"
     name2 = f"{r2.get('First Name', '')}"
 
     email1 = str(r1.get('Email', ''))
     email2 = str(r2.get('Email', ''))
 
-    # phone1 = str(r1.get('Phone', ''))
-    # phone2 = str(r2.get('Phone', ''))
 
     name_score = fuzz.token_set_ratio(name1, name2)
     email_score = fuzz.partial_ratio(email1, email2)
@@ -57,8 +55,8 @@ print(f"Total blocks created: {len(blocks)}\n")
 limit = 0
 G = nx.Graph()
 for block_key, block_records in blocks.items():
-    if limit == 2:
-                break
+    # if limit == 100:
+    #             break
     print(f"Processing block: {block_key} with {len(block_records)} records")
 
     for i in range(len(block_records)):
@@ -76,9 +74,20 @@ clusters = list(nx.connected_components(G))
 
 print(f"Found {len(clusters)} potential duplicate groups.\n")
 results_file.write(f"Found {len(clusters)} potential duplicate groups.\n")
-for idx, group in enumerate(clusters, 1):
-    print(f"Group {idx}:")
-    for record_id in group:
-        contact = df[df['Contact ID'] == record_id].to_dict(orient='records')[0]
-        print(f"  - {contact['First Name']} {contact['Last Name']} | {contact['Email']} | {contact['Phone']}| {normalize(contact['Home Zip/Postal Code'])}")
-    print()
+
+# Prepare to write all related names to a new CSV
+output_csv = "./data/FULL_DUPLICATE_GROUPS_LOW_WEIGHT.csv"
+with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
+    fieldnames = df.columns.tolist() + ['Duplicate Group']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for idx, group in enumerate(clusters, 1):
+        # print(f"Group {idx}:")
+        for record_id in group:
+            contact = df[df['Contact ID'] == record_id].to_dict(orient='records')[0]
+            results_file.write(f"  - {contact['First Name']} {contact['Last Name']} | {contact['Email']} | {contact['Phone']}| {normalize(contact['Home Zip/Postal Code'])}\n")
+            # Write to CSV with group number
+            row = contact.copy()
+            row['Duplicate Group'] = idx
+            writer.writerow(row)
