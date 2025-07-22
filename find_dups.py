@@ -10,7 +10,7 @@ import networkx as nx
 
 filepath = "./data/LN_DUPLICATES_FULL.csv"
 
-results = "./data/dup_results2.txt"
+results = "./data/dup_results3.txt"
 
 results_file = open(results, 'w')
 
@@ -25,18 +25,25 @@ def normalize(text):
     text = re.sub(r'[^a-z0-9]', '', text.lower())
     return text
 
-def is_duplicate(r1, r2, threshold=68):
+def is_duplicate(r1, r2, threshold=75):
+
     name1 = f"{r1.get('First Name', '')}"
     name2 = f"{r2.get('First Name', '')}"
 
+    email = True
     email1 = str(r1.get('Email', ''))
     email2 = str(r2.get('Email', ''))
+    if email1.strip() == '' or email2.strip() == '':
+        email = False
 
-
+    email_score = 0     
     name_score = fuzz.token_set_ratio(name1, name2)
-    email_score = fuzz.partial_ratio(email1, email2)
 
-    final_score = 0.6 * name_score + 0.3 * email_score
+    if email:
+        email_score = fuzz.partial_ratio(email1, email2)
+        final_score = 0.5 * name_score + 0.5 * email_score
+    else: 
+        final_score = name_score
     return final_score >= threshold
 
 
@@ -76,7 +83,7 @@ print(f"Found {len(clusters)} potential duplicate groups.\n")
 results_file.write(f"Found {len(clusters)} potential duplicate groups.\n")
 
 # Prepare to write all related names to a new CSV
-output_csv = "./data/FULL_DUPLICATE_GROUPS_LOW_WEIGHT.csv"
+output_csv = "./data/FULL_DUPLICATE_GROUPS_EMAIL_WEIGHT.csv"
 with open(output_csv, 'w', newline='', encoding='utf-8') as csvfile:
     fieldnames = df.columns.tolist() + ['Duplicate Group']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
